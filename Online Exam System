@@ -1,0 +1,377 @@
+# This code is made by :(>>Youssef Amr<<>>Youssef Hisham<<>>Omar Wael<<)
+
+# Online Exam System // Python Project 
+import json
+import os  
+
+class User:
+    def __init__(self, user_id, name, email, password):
+        self.user_id = user_id  
+        self.name = name
+        self.email = email
+        self.password = password
+
+    def __str__(self):
+        return f"ID: {self.user_id}, Name: {self.name}, Email: {self.email}"
+
+class UserModel:
+    def __init__(self):
+        self.users = []
+        self.current_user = "No Current User"
+
+    def add_user(self, user_id, name, email, password):
+        if not self.validate_input(user_id, name, email, password):
+            return
+        user = User(user_id, name, email, password)
+        self.users.append(user)
+        print(f"User added: {user}")
+
+    def view_users(self):
+        if not self.users:
+            print("No users available.")
+        for user in self.users:
+            print(user)
+
+    def edit_user(self, user_id, new_name="No New Name", new_email="No New Email", new_password="No New Password"):
+        for user in self.users:
+            if user.user_id == user_id:
+                if new_name != "No New Name":
+                    user.name = new_name
+                if new_email != "No New Email":
+                    user.email = new_email
+                if new_password != "No New Password":
+                    user.password = new_password
+                print(f"User updated: {user}")
+                return
+        print("User not found.")
+
+    def delete_user(self, user_id):
+        for user in self.users:
+            if user.user_id == user_id:
+                self.users.remove(user)
+                print(f"User deleted: {user}")
+                return
+        print("User not found.")
+
+    def load_users(self, OnlineExam_System):
+        if not self.file_exists(OnlineExam_System):
+            print("File Not Found!!")
+            return
+        with open(OnlineExam_System, 'r') as file:  
+            data = json.load(file)
+            for item in data:
+                self.users.append(User(**item))
+            print("Users loaded successfully.")
+
+    def save_users(self, OnlineExam_System):
+        with open(OnlineExam_System, 'w') as file: 
+            json.dump([user.__dict__ for user in self.users], file)  
+            print("Users saved successfully.")
+
+    def validate_input(self, user_id, name, email, password):
+        if not user_id or not name or not email or not password:
+            print("All fields are required.")
+            return False
+        return True
+
+    def authenticate_user(self, email, password):
+        for user in self.users:
+            if user.email == email and user.password == password:
+                self.current_user = user
+                print(f"Welcome, {user.name}!")
+                return True
+        
+        # If user not found, create new user
+        print("User not found. Creating new user...")
+        user_id = len(self.users) + 1
+        name = input("Enter your name: ").strip()
+        self.add_user(user_id, name, email, password)
+        self.current_user = self.users[-1]  # Set the newly created user as the current user
+        return True
+
+    def file_exists(self, OnlineExam_System):
+        return os.path.isfile(OnlineExam_System) 
+
+    def search_users(self, keyword):
+        results = [user for user in self.users if keyword.lower() in user.name.lower() or keyword.lower() in user.email.lower()]
+        if not results:
+            print("No users found.")
+        for user in results:
+            print(user)
+
+    def print_summary(self):
+        print("User Summary:")
+        for user in self.users:
+            print(f"User {user.user_id}: {user.name}, {user.email}")
+
+
+class questionmodel:
+    def __init__(self):
+        self.questions = []
+
+    def add_question(self, question, options, answer):
+        self.questions.append({"question": question, "options": options, "answer": answer})
+        print("Question added!")
+
+    def view_questions(self):
+        if not self.questions:
+            print("No questions available.")
+            return
+        question_number = 1  
+        for q in self.questions:
+            print(f"Q{question_number}: {q['question']} | Options: {', '.join(q['options'])} | Answer: {q['answer']}")
+            question_number += 1 
+
+    def edit_question(self, question_taken, new_question=0, new_options=0, new_answer=0):
+        if question_taken < 0 or question_taken >= len(self.questions):
+            print("Question not found.")
+            return
+        if new_question:
+            self.questions[question_taken]['question'] = new_question
+        if new_options:
+            self.questions[question_taken]['options'] = new_options
+        if new_answer:
+            self.questions[question_taken]['answer'] = new_answer
+        print(f"Question updated: {self.questions[question_taken]}")
+
+    def delete_question(self, question_taken):
+        if question_taken < 0 or question_taken >= len(self.questions):
+            print("Question not found.")
+            return
+        removed_question = self.questions.pop(question_taken)
+        print(f"Question deleted: {removed_question['question']}")
+
+    def save_questions(self, OnlineExam_System):
+        with open(OnlineExam_System, 'w') as file:
+            json.dump(self.questions, file)
+        print("Questions saved successfully.")
+
+    def load_questions(self, OnlineExam_System):
+        if not self.file_exists(OnlineExam_System):
+            print("File Not Found!!")
+            return
+        with open(OnlineExam_System, 'r') as file:
+            self.questions = json.load(file)
+        print("Questions loaded successfully.")
+
+class AdminModel(UserModel):
+    def __init__(self):
+        super().__init__()
+        self.question_model = questionmodel()
+        self.add_user(0, "Admin", "yousseft624@gmail.com", "youssef1")
+
+    def authenticate_admin(self, email, password):
+        if email == "yousseft624@gmail.com" and password == "youssef1":
+            print("Admin logged in successfully!")
+            return True
+        else:
+            return super().authenticate_user(email, password)
+
+
+class OnlineExamSystem:
+    def __init__(self):
+        self.questions = []
+        self.answers = []
+        self.user_answers = []
+        self.score = 0
+
+    def add_question(self, question, options, answer):
+        self.questions.append({"question": question, "options": options, "answer": answer})
+
+    def take_exam(self):
+        question_number = 1
+        for q in self.questions:
+            print(f"Q{question_number}: {q['question']}")
+            options = ['A', 'B', 'C', 'D']  
+            i = 0
+            for option in q['options']:  
+                print(f"  {options[i]}. {option}") 
+                i += 1
+            user_answer = ""
+            while user_answer not in options:  
+                user_answer = input("Your answer (A/B/C/D): ").strip()
+                if user_answer not in options:
+                    print("Invalid input! Please enter A, B, C, or D.\n or write an upper letter")
+            self.user_answers.append(user_answer)
+            if user_answer == q['answer']:
+                self.score += 1
+            question_number += 1
+
+    def display_score(self):
+        print(f"\nYou scored: {self.score} out of {len(self.questions)}")
+        passing_exam = 4 / 7 * len(self.questions) 
+        if self.score < passing_exam:
+            print("You Failed😒")
+        else:
+            print("You Passed😁")
+
+    def save_score(self, OnlineExam_System):
+        with open(OnlineExam_System, "w") as file:
+            file.write(f"Score: {self.score}/{len(self.questions)}\n")
+            question_number = 1
+            for q in self.questions:
+                file.write(f"Q{question_number}: {q['question']}\n")
+                file.write(f"Your answer: {self.user_answers[question_number - 1]}, Correct answer: {q['answer']}\n")
+                question_number += 1
+
+    def save_scores(self, OnlineExam_System):
+        scores_data = {
+            'score': self.score,
+            'user_answers': self.user_answers,
+            'questions': self.questions
+        }
+        with open(OnlineExam_System, 'w') as file:
+            json.dump(scores_data, file)
+        print("Scores saved successfully.")
+
+    def load_scores(self, OnlineExam_System):
+        if not self.file_exists(OnlineExam_System):
+            print("File Not Found!!")
+            return
+        with open(OnlineExam_System, 'r') as file:
+            scores_data = json.load(file)
+            self.score = scores_data['score']
+            self.user_answers = scores_data['user_answers']
+            self.questions = scores_data['questions']
+        print("Scores loaded successfully.")
+
+
+admin_model=AdminModel()
+user_model=UserModel()
+question_model=questionmodel()
+exam_system=OnlineExamSystem()
+
+
+exam_system.add_question("What is the keyword used to define a function in Python?", ["def", "function", "define", "func"], "A")
+exam_system.add_question("Which of these data types is not immutable?", ["Tuple", "List", "String", "Integer"], "B")
+exam_system.add_question("Which method is used to convert a string to all uppercase letters in Python?", ["upper()", "uppercase()", "toUpperCase()", "capitalize()"], "A")
+exam_system.add_question("What is the output of print(2**3)?", ["6", "8", "9", "12"], "B")
+exam_system.add_question("How do you insert COMMENTS in Python code?", ["#", "//", "/*", "<!--"], "A")
+exam_system.add_question("Which method can be used to remove whitespace from both ends of a string?", ["strip()", "trim()", "cut()", "rstrip()"], "A")
+exam_system.add_question("What is the correct file extension for Python files?", [".pt", ".pyt", ".pyth", ".py"], "D")
+
+
+def main_menu():
+    print("\nMain Menu:")
+    print("1. Admin Login")
+    print("2. User Login")
+    print("3. Exit")
+
+def admin_menu():
+    print("\nAdmin Menu:")
+    print("1. Add User")
+    print("2. View Users")
+    print("3. Edit User")
+    print("4. Delete User")
+    print("5. Add Question")
+    print("6. View Questions")
+    print("7. Edit Question")
+    print("8. Delete Question")
+    print("9. Save Questions")
+    print("10. Load Questions")
+    print("11. Logout")
+
+def user_menu():
+    print("\nUser Menu:")
+    print("1. Take Exam")
+    print("2. View Score")
+    print("3. Logout")
+
+def run_system():
+    while True:
+        main_menu()
+        choice = input("Enter your choice: ").strip()
+
+        if choice == "1":  
+            email = input("Enter admin email: ").strip()
+            password = input("Enter admin password: ").strip()
+            if admin_model.authenticate_admin(email, password):
+                while True:
+                    admin_menu()
+                    admin_choice = input("Enter your choice: ").strip()
+
+                    if admin_choice == "1":
+                        user_id = input("Enter user ID: ").strip()
+                        name = input("Enter user name: ").strip()
+                        email = input("Enter user email: ").strip()
+                        password = input("Enter user password: ").strip()
+                        admin_model.add_user(user_id, name, email, password)
+
+                    elif admin_choice == "2":
+                        admin_model.view_users()
+
+                    elif admin_choice == "3":
+                        user_id = int(input("Enter user ID to edit: "))
+                        new_name = input("Enter new name: ").strip()
+                        new_email = input("Enter new email: ").strip()
+                        new_password = input("Enter new password: ").strip()
+                        admin_model.edit_user(user_id, new_name, new_email, new_password)
+
+                    elif admin_choice == "4":
+                        user_id = int(input("Enter user ID to delete: "))
+                        admin_model.delete_user(user_id)
+
+                    elif admin_choice == "5":
+                        question = input("Enter the question: ").strip()
+                        options = [input(f"Option {i+1}: ").strip() for i in range(4)]
+                        answer = input("Enter the correct answer (A/B/C/D): ").strip().upper()
+                        admin_model.question_model.add_question(question, options, answer)
+
+                    elif admin_choice == "6":
+                        admin_model.question_model.view_questions()
+
+                    elif admin_choice == "7":
+                        question_number = int(input("Enter the question number to edit: ")) - 1
+                        new_question = input("Enter new question: ").strip()
+                        new_options = [input(f"Option {i+1}: ").strip() for i in range(4)]
+                        new_answer = input("Enter new answer: ").strip().upper()
+                        admin_model.question_model.edit_question(question_number, new_question, new_options, new_answer)
+
+                    elif admin_choice == "8":
+                        question_number = int(input("Enter the question number to delete: ")) - 1
+                        admin_model.question_model.delete_question(question_number)
+
+                    elif admin_choice == "9":
+                        filename = input("Enter filename to save questions: ").strip()
+                        admin_model.question_model.save_questions(filename)
+
+                    elif admin_choice == "10":
+                        filename = input("Enter filename to load questions: ").strip()
+                        admin_model.question_model.load_questions(filename)
+
+                    elif admin_choice == "11":
+                        print("Admin logged out.")
+                        break
+
+                    else:
+                        print("Invalid choice. Try again.")
+
+        elif choice == "2":  
+            email = input("Enter user email: ").strip()
+            password = input("Enter user password: ").strip()
+            if user_model.authenticate_user(email, password):
+                while True:
+                    user_menu()
+                    user_choice = input("Enter your choice: ").strip()
+
+                    if user_choice == "1":
+                        exam_system.take_exam()
+
+                    elif user_choice == "2":
+                        exam_system.display_score()
+
+                    elif user_choice == "3":
+                        print("User logged out.")
+                        break
+
+                    else:
+                        print("Invalid choice. Try again.")
+
+        elif choice == "3":  
+            print("Exiting system. Goodbye!")
+            break
+
+        else:
+            print("Invalid choice. Try again.")
+
+run_system()
