@@ -1,1 +1,73 @@
+package selenium.guru99;
+
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeClass;
+import org.openqa.selenium.By;
+public class WorkingWithGuru99 {
+		ChromeDriver driver;
+		String url = "http://demo.guru99.com/V4";
+		@BeforeClass
+		public void setupBrowser() {
+			System.setProperty("webdriver.chrome.driver" ,"/usr/bin/chromedriver/chromedriver");
+			ChromeOptions options = new ChromeOptions();
+			options.addArguments("--no-sandbox");
+			driver= new ChromeDriver(options);
+			
+			this.driver.get(url);
+			driver.manage().window().maximize();
+			
+		}
+		@AfterClass
+		public void shutdown() {
+			driver.close();
+			driver.quit();
+		
+		}
+
+			@Test(priority = 1)
+			public void verifyPageTitle() {
+				String expectedPageTitle = "Guru99 Bank Home Page";
+				String actualPageTitle = driver.getTitle();
+				Assert.assertEquals(actualPageTitle, expectedPageTitle);
+			}
+			@Test(priority = 2)
+			public void login() {
+				WebElement userIdInput = driver.findElement(By.name("uid"));
+				WebElement passwordInput = driver.findElement(By.name("password"));
+				WebElement loginButton = driver.findElement(By.name("btnLogin"));
+				userIdInput.sendKeys("mngr600801");
+				passwordInput.sendKeys("yqetebA");
+				loginButton.click();
+				String expectedAuthenticatedHomePageTitle = "Guru99 Bank Manager Home Page";
+				String actualPageTitle = driver.getTitle();
+				Assert.assertEquals(actualPageTitle, expectedAuthenticatedHomePageTitle);
+			}
+			@Test(priority = 3)
+			public void newCustomer() {
+				driver.findElement(By.linkText("New Customer")).click();
+				driver.findElement(By.xpath("//input[@value='f']")).click();
+				driver.findElement(By.name("name")).sendKeys("youssef amr");
+				driver.findElement(By.name("dob")).sendKeys("06/06/2024");
+				driver.findElement(By.name("addr")).sendKeys("San Fransisco");
+				driver.findElement(By.name("city")).sendKeys("hurghada");
+				driver.findElement(By.name("state")).sendKeys("california");
+				driver.findElement(By.name("pinno")).sendKeys("504512");
+				driver.findElement(By.name("telephoneno")).sendKeys("+21612345678");
+				driver.findElement(By.name("emailid")).sendKeys("testing"+ System.currentTimeMillis()+"@draft.com");
+				driver.findElement(By.name("password")).sendKeys("azertyuiop");
+				driver.findElement(By.name("sub")).click();
+				/*String expectedRegisteredCustomerPageTitle = "Guru99 Bank Manager Home Page";
+				String actualPageTitle = driver.getTitle();
+				Assert.assertEquals(actualPageTitle, expectedRegisteredCustomerPageTitle);*/
+				WebElement customerIdValue = driver.findElement(By.xpath("//table/tbody/tr[4]/td[2]"));
+				Assert.assertNotNull(customerIdValue);		
+				System.out.println(customerIdValue.getText());
+				
+			}
+}
 
