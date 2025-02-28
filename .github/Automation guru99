@@ -1,1 +1,38 @@
+package selenium.scripts;
+
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
+public class WorkingWithChrome {
+	ChromeDriver driver;
+	String url = "http://demo.guru99.com";
+	public void setupBrowser() {
+		System.setProperty("webdriver.chrome.driver" ,"/usr/bin/chromedriver/chromedriver");
+		ChromeOptions options = new ChromeOptions();
+		options.addArguments("--no-sandbox");
+		driver= new ChromeDriver(options);
+		
+		this.driver.get(url);
+		driver.manage().window().maximize();
+	}
+
+	public void getTitle() {
+	String pageTitle = this.driver.getTitle();
+	System.out.println("title of the page -"+ pageTitle);
+	}
+	
+	public void close() {
+		this.driver.close();
+		this.driver.quit();
+	}
+	
+		public static void main(String[] args) {
+			WorkingWithChrome chrome = new WorkingWithChrome();
+			chrome.setupBrowser();
+			chrome.getTitle();
+			chrome.close();
+			
+		}
+		
+	}
 
